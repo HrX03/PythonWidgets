@@ -35,11 +35,11 @@ An handy cpu and ram usage viewer for the paranoids
   Debian: ```sudo apt install python3-pip```  
   Arch:   ```sudo pacman -S python-pip```
   
-* From pip install the module pyfiglet:  
+* From pip install the module psutil:  
   Debian: ```pip3 install psutil```  
   Arch:   ```pip install psutil```
   
-* Now just clone the repo and run the clock.
+* Now just clone the repo and run the stats viewer.
   ```  
      git clone https://github.com/HrX03/PythonWidgets  
      cd PythonWidgets  
