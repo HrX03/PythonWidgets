@@ -1,7 +1,8 @@
 import time
 import datetime
 import sys
-import curses
+import signal
+import os
 from pyfiglet import Figlet
 
 f = Figlet(font='big')
@@ -12,7 +13,10 @@ hours = now.hour
 minutes = now.minute
 seconds = now.second
 
-def updateClock():
+os.system("setterm -cursor off")
+rows, columns = os.popen('stty size', 'r').read().split()
+
+def update_clock():
 	if(len(str(hours)) == 1):
 		altH = "0" + str(hours)
 	else:
@@ -46,12 +50,20 @@ def updateClock():
 	
 	print('\n'.join(output))
 
+def handle_exit(signum, frame):
+    os.system("setterm -cursor on")
+    sys.stdout.write("\x1b[8;{rows};{cols}t".format(rows=rows, cols=columns))
+    sys.stdout.write("\033[H\033[J")
+    sys.exit(0)
+
 while(True):
 	now = datetime.datetime.now()
 
 	hours = now.hour
 	minutes = now.minute
 	seconds = now.second
-		
-	updateClock()
+	
+	signal.signal(signal.SIGINT, handle_exit)
+
+	update_clock()
 	time.sleep(0.990)
