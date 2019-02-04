@@ -1,43 +1,48 @@
-import cv2
-import numpy
-import sys
+import psutil
 import signal
+import math
+import time
+import sys
 import os
 
+cpu_percent = psutil.cpu_percent(interval=1)
+ram_percent = dict(psutil.virtual_memory()._asdict())['percent']
+
 os.system("setterm -cursor off")
+sys.stdout.write("\x1b[8;{rows};{cols}t".format(rows=6, cols=58))
 rows, columns = os.popen('stty size', 'r').read().split()
 
-def create_ascii_map():
-    char_array = list(".:o08#")
-    new_array = []
+def cpu_bar():
+    cpu_loading_bar_array = []
+    cpu_loading_bar_array.append("(")
 
-    for ch in char_array:
-        for i in range(50):
-            new_array.append(ch)
+    cpu_bars = math.floor(int(cpu_percent)/2)
 
-    return new_array
+    for obj in range(cpu_bars):
+        cpu_loading_bar_array.append('=')
 
-def convert_to_ascii(image, grey_image):
-    map_array = create_ascii_map()
-    new_ascii_array = []
-    last_ascii_array = []
-    width = int(image.shape[1])
-    height = int(image.shape[0])
-    
-    sys.stdout.write("\x1b[8;{rows};{cols}t".format(rows=height, cols=width))
-    sys.stdout.write("\033[H\033[J")
+    for obj in range(50-cpu_bars):
+        cpu_loading_bar_array.append(' ')
 
-    for i in range(height):
-        for j in range(width):
-            color = "\033[38;2;" + str(image[i, j][2]) + ";" + str(image[i, j][1]) + ";" + str(image[i, j][0]) + "m"
-            new_ascii_array.append(color+map_array[grey_image[i, j]])
+    cpu_loading_bar_array.append(")")
 
-        new_ascii_array.append("\n")
+    return cpu_loading_bar_array
 
-    for i in range(len(new_ascii_array)-1):
-        last_ascii_array.append(new_ascii_array[i])
+def ram_bar():
+    ram_loading_bar_array = []
+    ram_loading_bar_array.append("(")
 
-    return last_ascii_array
+    ram_bars = math.floor(int(ram_percent)/2)
+
+    for obj in range(ram_bars):
+        ram_loading_bar_array.append('=')
+
+    for obj in range(50-ram_bars):
+        ram_loading_bar_array.append(' ')
+
+    ram_loading_bar_array.append(")")
+
+    return ram_loading_bar_array
 
 def handle_exit(signum, frame):
     os.system("setterm -cursor on")
@@ -45,37 +50,23 @@ def handle_exit(signum, frame):
     sys.stdout.write("\033[H\033[J")
     sys.exit(0)
 
-vc = cv2.VideoCapture(0)
+def space_num(param):
+    spaces = []
+    float_to_int = len(str(int(param)))
 
-if vc.isOpened():
-    rval, frame = vc.read()
-else:
-    rval = False
+    for obj in range(3 - float_to_int):
+        spaces.append(" ")
 
-while rval:
-    signal.signal(signal.SIGINT, handle_exit)
+    return ''.join(spaces)
 
-    frame_grey = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
-    scale_percent = 8
-    width = int(frame_grey.shape[1] * scale_percent / 50)
-    height = int(frame_grey.shape[0] * scale_percent / 100)
-    dim = (width, height)
+while True:
+    cpu_percent = psutil.cpu_percent(interval=1)
+    ram_percent = dict(psutil.virtual_memory()._asdict())['percent']
+
+    cpu_string = "CPU Usage:\n" + str(cpu_percent) + "%" + space_num(cpu_percent) + ''.join(cpu_bar()) + "\n\n"
+    ram_string = "RAM Usage:\n" + str(ram_percent) + "%" + space_num(ram_percent) + ''.join(ram_bar())
     
-    frame_resized = cv2.resize(frame, dim, interpolation=cv2.INTER_AREA)
-    frame_grey_resized = cv2.resize(frame_grey, dim, interpolation=cv2.INTER_AREA)
-
-    ascii_image = convert_to_ascii(cv2.flip(frame_resized, 1), cv2.flip(frame_grey_resized, 1))
-
-    print(''.join(ascii_image))
-
-    if cv2.waitKey(16) & 0xFF == ord('q'):
-        break
-
-    rval, frame = vc.read()
-
-vc.release()
-cv2.destroyAllWindows()
-os.system("setterm -cursor on")
-sys.stdout.write("\x1b[8;{rows};{cols}t".format(rows=rows, cols=columns))
-sys.stdout.write("\033[H\033[J")
-sys.exit(0)
+    sys.stdout.write("\033[H\033[J")
+    
+    signal.signal(signal.SIGINT, handle_exit)
+    print(cpu_string + ram_string)
