@@ -10,7 +10,7 @@ This widgets are made for making your linux experience better, i will constantly
 * more to come
 
 ## camera.py
-A super cool ASCII coloured camera for looking at your beautiful self in 24 bit!
+A super cool ASCII coloured camera for looking at your beautiful self in 24 bit! (Thanks to @corship for the initial code)
 #### Usage:
 * Install pip3 if not already installed.  
   Debian: ```sudo apt install python3-pip```  
